@@ -1,4 +1,3 @@
-  
 import React, { useState } from "react";
 import axios from "axios";
 
@@ -19,7 +18,6 @@ const UpdateMovie = props => {
       ...movie,
       stars: movie.stars.split(", ")
     };
-    // make a PUT request to edit the movie
     axios
       .put(
         `http://localhost:5000/api/movies/${props.match.params.id}`,
