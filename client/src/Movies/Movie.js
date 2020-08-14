@@ -1,56 +1,55 @@
-  
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import axios from "axios";
+import {useParams, Link, useHistory} from "react-router-dom";
+import MovieCard from "./MovieCard";
 
-const UpdateMovie = props => {
-  const [movie, setMovie] = useState({ id: props.match.params.id });
+function Movie({addToSavedList},) {
+  const [movie, setMovie] = useState(null);
+  const params = useParams();
+  const {push} = useHistory();
 
-  const handleChange = e => {
-    setMovie({
-      ...movie,
-      [e.target.name]: e.target.value
-    });
-    console.log(movie);
-  };
-
-  const handleSubmit = e => {
-    e.preventDefault();
-    const movieFormatter = {
-      ...movie,
-      stars: movie.stars.split(", ")
-    };
-    // make a PUT request to edit the movie
+  const fetchMovie = (id) => {
     axios
-      .put(
-        `http://localhost:5000/api/movies/${props.match.params.id}`,
-        movieFormatter
-      )
-      .then(res => {
-        console.log(res);
-        document.querySelector("form").reset();
-        props.history.push("/");
-      })
-      .catch(err => {
-        console.log(err);
-      });
+      .get(`http://localhost:5000/api/movies/${id}`)
+      .then((res) => setMovie(res.data))
+      .catch((err) => console.log(err.response));
   };
+
+  const saveMovie = () => {
+    addToSavedList(movie);
+  };
+
+  useEffect(() => {
+    fetchMovie(params.id);
+  }, [params.id]);
+
+  const handleDelete = (e) => {
+    axios
+      .delete(`http://localhost:5000/api/movies/${params.id}`)
+      .then((res) => {
+        push("/");
+        window.location.reload();
+      })
+      .catch((err) => console.error(err.message));
+  };
+
+  if (!movie) {
+    return <div>Loading movie information...</div>;
+  }
 
   return (
-    <div className="movie-card">
-      <p>Edit the Movies</p>
-      <form onSubmit={handleSubmit}>
-        <input placeholder="Movie Name" name="title" onChange={handleChange} />
-        <input placeholder="Director" name="director" onChange={handleChange} />
-        <input
-          placeholder="Metascore"
-          name="metascore"
-          onChange={handleChange}
-        />
-        <input placeholder="Stars" name="stars" onChange={handleChange} />
-        <button type="submit">Update</button>
-      </form>
+    <div className="save-wrapper">
+      <MovieCard movie={movie} />
+
+      <div className="save-button" onClick={saveMovie}>
+        Save
+      </div>
+      <Link to={`/update-movie/${movie.id}`} className="update-button">
+        Update
+      </Link>
+      <button className="home-button" onClick={handleDelete}>Delete</button>
     </div>
   );
-};
+}
 
-export default UpdateMovie;
+export default Movie;
